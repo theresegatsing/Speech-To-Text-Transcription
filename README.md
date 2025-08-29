@@ -7,10 +7,10 @@ When you press **Ctrl+C**, it prints one **clean paragraph** (with optional fill
 
 
 ## 📸 Demo (What you see)
-* 🎙️  Single-line live dictation… press Ctrl+C to stop. *
-*  …in real time the last part of your paragraph appears here… *
-* 📝 Transcript: *
-* Here is the final paragraph with punctuation. *
+*🎙️  Single-line live dictation… press Ctrl+C to stop.*
+*…in real time the last part of your paragraph appears here…*
+*📝 Transcript:*
+*Here is the final paragraph with punctuation.*
 
 
 
@@ -41,6 +41,7 @@ When you press **Ctrl+C**, it prints one **clean paragraph** (with optional fill
 - Windows mic permission enabled:
 
 - Settings → Privacy & security → Microphone → allow desktop apps
+
 
 
 
