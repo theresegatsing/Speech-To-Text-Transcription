@@ -3,10 +3,16 @@ import sys
 import signal
 import re
 import shutil
+import os
 
 import numpy as np
 import sounddevice as sd
 from google.cloud import speech
+try:
+    from colorama import init as colorama_init
+    colorama_init()  # enable ANSI on Windows consoles
+except Exception:
+    pass
 
 # ========= Settings =========
 LANGUAGE = "en-US"
@@ -14,69 +20,60 @@ SAMPLE_RATE = 16000
 CHANNELS = 1
 BLOCKS_PER_SECOND = 10          # 100ms chunks
 REMOVE_FILLERS = True           # remove small fillers like "um", "uh", "hmm"
-SOFT_WRAP = True                # wrap to terminal width (keeps output tidy)
 
 # ========= Helpers =========
 audio_q = queue.Queue()
 committed_text = ""             # finalized text from API
-last_rendered = ""              # avoid repainting same string
+last_len = 0                    # for clearing leftover characters on the line
 
 FILLER_RE = re.compile(r"\b(?:um+|uh+|hmm+|erm+|eh+)\b[,.\s]*", flags=re.IGNORECASE)
 
 def clean_text(t: str) -> str:
-    """Normalize spacing/punctuation (and optionally remove fillers)."""
     if REMOVE_FILLERS:
         t = FILLER_RE.sub("", t)
     t = re.sub(r"\s+", " ", t.strip())
     t = re.sub(r"\s+([,.;:!?])", r"\1", t)
     return t.strip()
 
-def render_live(committed: str, interim: str):
-    """Render a single updating line/paragraph: committed + interim."""
-    global last_rendered
-    text = (committed + " " + interim).strip() if interim else committed.strip()
-    text = clean_text(text)
+def one_line_preview(paragraph: str):
+    """
+    Render a single updating line (no newlines).
+    It truncates to terminal width and shows an ellipsis prefix if needed.
+    """
+    global last_len
+    paragraph = clean_text(paragraph)
 
-    # Optional soft wrap to terminal width for nicer display
-    if SOFT_WRAP:
-        try:
-            width = shutil.get_terminal_size((100, 20)).columns
-        except Exception:
-            width = 100
-        # Simple wrap: break long text into lines at spaces
-        out_lines = []
-        line = ""
-        for word in text.split(" "):
-            if not line:
-                line = word
-            elif len(line) + 1 + len(word) <= width:
-                line += " " + word
-            else:
-                out_lines.append(line)
-                line = word
-        if line:
-            out_lines.append(line)
-        text_to_print = "\n".join(out_lines)
-        # Clear previously printed lines by printing enough newlines and carriage returns
-        # Simplest reliable approach: print a leading carriage return, then full block, then trailing spaces on last line.
-        if text_to_print != last_rendered:
-            # Clear screen section (cheap): print \r then the new block and a final newline-less line
-            # For PowerShell/cmd this is fine; Git Bash also works.
-            print("\r", end="")
-            # Move cursor up for multi-line re-render: print enough newlines to reset, then repaint
-            # (This simple version just repaints; the extra blank line avoids leftover chars)
-            print(text_to_print + ("\n" if not text_to_print.endswith("\n") else ""), end="", flush=True)
-            last_rendered = text_to_print
+    # figure available width (keep at least 10 chars fallback)
+    try:
+        width = shutil.get_terminal_size((100, 20)).columns
+    except Exception:
+        width = 100
+    width = max(10, width)
+
+    # reserve a little room so we don't wrap
+    max_chars = max(10, width - 2)
+
+    if len(paragraph) > max_chars:
+        view = "…" + paragraph[-(max_chars - 1):]  # tail view with ellipsis
     else:
-        # Single line: overwrite the same line using carriage return
-        if text != last_rendered:
-            print("\r" + text + " " * max(0, len(last_rendered) - len(text)), end="", flush=True)
-            last_rendered = text
+        view = paragraph
+
+    # clear line and rewrite (ANSI: \r + clear line)
+    # If ANSI not available, we also pad with spaces to overwrite leftovers.
+    clear_seq = "\r\033[2K"
+    print(clear_seq + view, end="", flush=True)
+
+    # Extra spaces in case ANSI clear didn't fully clear (older shells)
+    pad = max(0, last_len - len(view))
+    if pad:
+        print(" " * pad + "\r" + view, end="", flush=True)
+
+    last_len = len(view)
 
 def audio_callback(indata, frames, time_info, status):
     if status:
-        print(f"\n[Audio warning] {status}", file=sys.stderr, flush=True)
-    # float32 (-1..1) -> int16 bytes (LINEAR16)
+        # Put a newline so the warning doesn't break the single line UX
+        print("\n[Audio warning]", status, file=sys.stderr, flush=True)
     audio_q.put((indata.copy() * 32767).astype(np.int16).tobytes())
 
 def request_generator():
@@ -96,16 +93,16 @@ def main():
         sample_rate_hertz=SAMPLE_RATE,
         language_code=LANGUAGE,
         enable_automatic_punctuation=True,
-        # model="latest_long",  # uncomment if available to you
+        # model="latest_long",  # optional
     )
     streaming_config = speech.StreamingRecognitionConfig(
         config=config,
-        interim_results=True,       # we need interim for live preview
+        interim_results=True,       # we need interim to show live
         single_utterance=False,     # keep listening until Ctrl+C
     )
 
     blocksize = int(SAMPLE_RATE / BLOCKS_PER_SECOND)
-    print("🎙️  Live dictation… press Ctrl+C to stop.\n")
+    print("🎙️  Single-line live dictation… press Ctrl+C to stop.", end="", flush=True)
 
     with sd.InputStream(
         samplerate=SAMPLE_RATE,
@@ -126,25 +123,25 @@ def main():
                     txt = clean_text(alt.transcript)
 
                     if result.is_final:
-                        # Commit finalized chunk and clear interim
                         if txt:
-                            # Add space if needed before appending
                             committed_text = (committed_text + " " + txt).strip() if committed_text else txt
                         current_interim = ""
-                        render_live(committed_text, current_interim)
+                        one_line_preview(committed_text)  # show committed only
                     else:
-                        # Update live with interim appended to committed
                         current_interim = txt
-                        render_live(committed_text, current_interim)
+                        # committed + interim (single line)
+                        live = (committed_text + " " + current_interim).strip() if current_interim else committed_text
+                        one_line_preview(live)
 
         except KeyboardInterrupt:
             pass
         finally:
             audio_q.put(None)
 
-    # Final clean paragraph
+    # Finish line, then print final paragraph on a new line
+    print()  # move to next line cleanly
     final_paragraph = clean_text(committed_text)
-    print("\n\n📝 Transcript:")
+    print("\n📝 Transcript:")
     print(final_paragraph if final_paragraph else "(No transcript captured.)")
 
 if __name__ == "__main__":
