@@ -16,17 +16,17 @@ Here is the final paragraph with punctuation.
 
 ## Features
 
-✅ Live single-line preview (no scrolling)
+- ✅ Live single-line preview (no scrolling)
 
-✅ Final paragraph printout
+- ✅ Final paragraph printout
 
-✅ Optional filler removal (um, uh, hmm)
+- ✅ Optional filler removal (um, uh, hmm)
 
-✅ Language configurable (e.g., en-US, fr-FR)
+- ✅ Language configurable (e.g., en-US, fr-FR)
 
-✅ Uses Google’s Streaming Recognize for low latency
+- ✅ Uses Google’s Streaming Recognize for low latency
 
-✅ Designed for Windows terminal (works in PowerShell, cmd, Git Bash)
+- ✅ Designed for Windows terminal (works in PowerShell, cmd, Git Bash)
 
 ---
 
@@ -42,6 +42,7 @@ Windows mic permission enabled:
 
 
 Settings → Privacy & security → Microphone → allow desktop apps
+
 
 
 
