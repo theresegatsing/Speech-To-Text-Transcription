@@ -1,4 +1,4 @@
-﻿# 🎙️ Live Speech-to-Text (Google Cloud) — Mic → One Paragraph
+﻿# 🎙️ Live Speech-to-Text (Google Cloud) 
 
 A Python tool that transcribes your **live microphone audio** using **Google Cloud Speech-to-Text**.  
 While you speak, the console shows a **single, non-scrolling line** that updates in place.  
@@ -41,6 +41,7 @@ When you press **Ctrl+C**, it prints one **clean paragraph** (with optional fill
 - Windows mic permission enabled:
 
 - Settings → Privacy & security → Microphone → allow desktop apps
+
 
 
 
