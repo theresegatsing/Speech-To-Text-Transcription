@@ -6,13 +6,15 @@ When you press **Ctrl+C**, it prints one **clean paragraph** (with optional fill
 
 ---
 
-**Demo (What you see)**
+## Demo (What you see)
 🎙️  Single-line live dictation… press Ctrl+C to stop.
 …in real time the last part of your paragraph appears here…
 📝 Transcript:
 Here is the final paragraph with punctuation.
 
-**Features**
+---
+
+## Features
 
 ✅ Live single-line preview (no scrolling)
 
@@ -26,7 +28,9 @@ Here is the final paragraph with punctuation.
 
 ✅ Designed for Windows terminal (works in PowerShell, cmd, Git Bash)
 
-**Requirements**
+---
+
+## Requirements
 
 Python 3.11+
 
@@ -38,4 +42,5 @@ Windows mic permission enabled:
 
 
 Settings → Privacy & security → Microphone → allow desktop apps
+
 
