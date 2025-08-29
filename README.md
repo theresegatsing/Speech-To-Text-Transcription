@@ -32,16 +32,16 @@ Here is the final paragraph with punctuation.
 
 ## Requirements
 
-Python 3.11+
+- Python 3.11+
 
-A Google Cloud project with Speech-to-Text API enabled
+- A Google Cloud project with Speech-to-Text API enabled
 
-A Service Account JSON key (downloaded to your machine)
+- A Service Account JSON key (downloaded to your machine)
 
-Windows mic permission enabled:
+- Windows mic permission enabled:
 
+- Settings → Privacy & security → Microphone → allow desktop apps
 
-Settings → Privacy & security → Microphone → allow desktop apps
 
 
 
