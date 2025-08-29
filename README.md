@@ -4,15 +4,15 @@ A Python tool that transcribes your **live microphone audio** using **Google Clo
 While you speak, the console shows a **single, non-scrolling line** that updates in place.  
 When you press **Ctrl+C**, it prints one **clean paragraph** (with optional filler-word removal).
 
----
 
-## Demo (What you see)
+
+## 📸 Demo (What you see)
 🎙️  Single-line live dictation… press Ctrl+C to stop.
 …in real time the last part of your paragraph appears here…
 📝 Transcript:
 Here is the final paragraph with punctuation.
 
----
+
 
 ## Features
 
@@ -42,5 +42,6 @@ Windows mic permission enabled:
 
 
 Settings → Privacy & security → Microphone → allow desktop apps
+
 
 
